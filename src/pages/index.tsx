@@ -1,0 +1,183 @@
+import Head from "next/head";
+import styles from "@/styles.module.css";
+import Select, { ActionMeta } from "react-select";
+import "reset-css";
+import placeholder from "../images/placeholder.webp";
+import Image from "next/image";
+import { useEffect, useState } from "react";
+import { MdFavorite } from "react-icons/md";
+import Link from "next/link";
+type selected = {
+  value: string;
+  label: string;
+};
+export default function Home() {
+  const [data, setData] = useState([]);
+  const [selectedOptions, setSelectedOptions] = useState("");
+  const [quote, setQuote] = useState({
+    current: 0,
+    high: 0,
+    low: 0,
+    open: 0,
+    close: 0,
+  });
+  const [profile, setProfile] = useState<{
+    country: string;
+    logo: string;
+    symbol: string;
+    name: string;
+  } | null>(null);
+
+  function selectHandler(
+    option: selected | null,
+    actionMeta: ActionMeta<selected>
+  ) {
+    if (option) {
+      setSelectedOptions(option.value);
+      getCompanyProfile();
+      getQuote();
+    }
+  }
+  async function getCompanyProfile() {
+    const queryParams = new URLSearchParams({
+      symbol: selectedOptions,
+    });
+    const res = await fetch(`/api/profile?${queryParams}`);
+    if (res.ok) {
+      const jsonData = await res.json();
+      setProfile(jsonData);
+    }
+  }
+  async function getQuote() {
+    const queryParams = new URLSearchParams({
+      symbol: selectedOptions,
+    });
+    const res = await fetch(`/api/quote?${queryParams}`);
+    if (res.ok) {
+      const jsonData = await res.json();
+      const { c, h, l, o, pc } = jsonData;
+      setQuote({ current: c, high: h, low: l, open: o, close: pc });
+    }
+  }
+  function addToFavorites() {
+    const favorites = localStorage.getItem("favorite");
+    if (!favorites) {
+      const favorite = {
+        items: [selectedOptions],
+      };
+      localStorage.setItem("favorite", JSON.stringify(favorite));
+      console.log("favortie set");
+    } else {
+      if (profile) {
+        const items = JSON.parse(favorites);
+        console.log(items);
+        console.log(selectedOptions);
+        const newItems = { items: [...items.items, selectedOptions] };
+
+        localStorage.setItem("favorite", JSON.stringify(newItems));
+        console.log(items);
+      }
+    }
+  }
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const url = `/api/symbols`;
+
+        const response = await fetch(url, {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (response.ok) {
+          const jsonData = await response.json();
+          setData(jsonData.symbols);
+        } else {
+          console.error("Error:", response.statusText);
+        }
+      } catch (error) {
+        console.error("Error:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+  const ProfileComponent = ({
+    country,
+    logo,
+  }: {
+    country: string;
+    logo: string;
+  }) => {
+    return (
+      <div className="mt-16">
+        <div className="flex">
+          <Image
+            src={logo ? logo : placeholder}
+            width={200}
+            height={200}
+            alt="companypic"
+          />
+          <div className="ml-12">
+            <span className="text-3xl block">
+              {profile ? profile.name : ""}
+            </span>
+            <span className="block mt-1 text-4xl ">${quote.current}</span>
+            <button
+              className="mt-5 bg-green-300 p-2 rounded-md hover:bg-green-400 transition-all  "
+              onClick={addToFavorites}
+            >
+              Add to Favourites
+            </button>
+          </div>
+        </div>
+        <div>
+          <span className="mt-20 block text-center text-2xl ">Summary</span>
+          <div className="mt-2 h-0.5 color bg-black m-auto"></div>
+          <div className="grid grid-cols-2 mt-3">
+            <div className="bg-red-300 h-28 m-3 rounded-lg p-5">
+              <span className="text-xl block">High Price</span>
+              <span className="text-3xl">${quote.high}</span>
+            </div>
+            <div className="bg-red-200 h-28 m-3 rounded-lg p-5">
+              <span className="text-xl block">Opening</span>
+              <span className="text-3xl">${quote.open}</span>
+            </div>
+            <div className="bg-red-400 h-28 m-3 rounded-lg p-5">
+              <span className="text-xl block">Low Price</span>
+              <span className="text-3xl">${quote.low}</span>
+            </div>
+            <div className="bg-red-600 h-28 m-3 rounded-lg p-5">
+              <span className="text-xl block">Closing</span>
+              <span className="text-3xl">${quote.close}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+  return (
+    <>
+      <Head>
+        <title>Create Next App</title>
+        <meta name="description" content="Generated by create next app" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
+      <main>
+        <div className="absolute right-10 top-10">
+          <Link href="/favorites">
+            <MdFavorite style={{ fontSize: "2.5em", color: "#f43f5e" }} />
+          </Link>
+        </div>
+        <div className="max-w-xl m-auto">
+          <div className="mt-8">
+            <Select options={data} onChange={selectHandler} />
+          </div>
+          {profile ? <ProfileComponent {...profile} /> : ""}
+        </div>
+      </main>
+    </>
+  );
+}
