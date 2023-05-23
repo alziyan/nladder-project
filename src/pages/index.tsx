@@ -4,7 +4,7 @@ import Select, { ActionMeta } from "react-select";
 import "reset-css";
 import placeholder from "../images/placeholder.webp";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { ReactPropTypes, useEffect, useState } from "react";
 import { MdFavorite } from "react-icons/md";
 import Link from "next/link";
 type selected = {
@@ -34,11 +34,11 @@ export default function Home() {
   ) {
     if (option) {
       setSelectedOptions(option.value);
-      getCompanyProfile();
-      getQuote();
+      getCompanyProfile(option.value);
+      getQuote(option.value);
     }
   }
-  async function getCompanyProfile() {
+  async function getCompanyProfile(selectedOptions: string) {
     const queryParams = new URLSearchParams({
       symbol: selectedOptions,
     });
@@ -48,7 +48,7 @@ export default function Home() {
       setProfile(jsonData);
     }
   }
-  async function getQuote() {
+  async function getQuote(selectedOptions: string) {
     const queryParams = new URLSearchParams({
       symbol: selectedOptions,
     });
@@ -66,16 +66,12 @@ export default function Home() {
         items: [selectedOptions],
       };
       localStorage.setItem("favorite", JSON.stringify(favorite));
-      console.log("favortie set");
     } else {
       if (profile) {
         const items = JSON.parse(favorites);
-        console.log(items);
-        console.log(selectedOptions);
         const newItems = { items: [...items.items, selectedOptions] };
 
         localStorage.setItem("favorite", JSON.stringify(newItems));
-        console.log(items);
       }
     }
   }
@@ -173,7 +169,11 @@ export default function Home() {
         </div>
         <div className="max-w-xl m-auto">
           <div className="mt-8">
-            <Select options={data} onChange={selectHandler} />
+            <Select
+              options={data}
+              onChange={selectHandler}
+              placeholder={"Search"}
+            />
           </div>
           {profile ? <ProfileComponent {...profile} /> : ""}
         </div>
