@@ -1,4 +1,5 @@
 import Head from "next/head";
+import { Playfair_Display } from "next/font/google";
 import styles from "@/styles.module.css";
 import Select, { ActionMeta } from "react-select";
 import "reset-css";
@@ -10,6 +11,83 @@ import Link from "next/link";
 type selected = {
   value: string;
   label: string;
+};
+type profile = {
+  country: string
+  logo: string
+  name: string
+}
+type quote = {
+  current: number,
+  high: number,
+  low: number,
+  open: number,
+  close: number,
+}
+const play = Playfair_Display({ subsets: ["latin"] });
+const ProfileComponent = ({profile,selectedOptions,quote}: {profile:profile,selectedOptions: string, quote:quote}) => {
+  function addToFavorites() {
+    const favorites = localStorage.getItem("favorite");
+    if (!favorites) {
+      const favorite = {
+        items: [selectedOptions],
+      };
+      localStorage.setItem("favorite", JSON.stringify(favorite));
+    } else {
+      if (profile) {
+        const items = JSON.parse(favorites);
+        const newItems = { items: [...items.items, selectedOptions] };
+
+        localStorage.setItem("favorite", JSON.stringify(newItems));
+      }
+    }
+  }
+  return (
+    <div className="mt-16">
+      <div className="flex">
+        <Image
+          src={profile.logo ? profile.logo : placeholder}
+          width={200}
+          height={200}
+          alt="companypic"
+        />
+        <div className="ml-12">
+          <span className={`text-3xl block ${play.className}`}>
+            {profile ? profile.name : ""}
+          </span>
+          <span className="block mt-1 text-4xl ">{quote.current}</span>
+          <button
+            className="mt-5 bg-green-300 p-2 rounded-md hover:bg-green-400 transition-all  "
+            onClick={addToFavorites}
+          >
+            Add to Favourites
+          </button>
+        </div>
+      </div>
+      <div>
+        <span className="mt-20 block text-center text-2xl ">Summary</span>
+        <div className="mt-2 h-0.5 color bg-black m-auto"></div>
+        <div className="grid grid-cols-2 mt-3">
+          <div className="bg-gray-400 h-28 m-3 rounded-lg p-5">
+            <span className="text-xl block">High Price</span>
+            <span className="text-3xl">${quote.high}</span>
+          </div>
+          <div className="bg-gray-400 h-28 m-3 rounded-lg p-5">
+            <span className="text-xl block">Opening</span>
+            <span className="text-3xl">${quote.open}</span>
+          </div>
+          <div className="bg-gray-400 h-28 m-3 rounded-lg p-5">
+            <span className="text-xl block">Low Price</span>
+            <span className="text-3xl">${quote.low}</span>
+          </div>
+          <div className="bg-gray-400 h-28 m-3 rounded-lg p-5">
+            <span className="text-xl block">Closing</span>
+            <span className="text-3xl">${quote.close}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 export default function Home() {
   const [data, setData] = useState([]);
@@ -59,32 +137,13 @@ export default function Home() {
       setQuote({ current: c, high: h, low: l, open: o, close: pc });
     }
   }
-  function addToFavorites() {
-    const favorites = localStorage.getItem("favorite");
-    if (!favorites) {
-      const favorite = {
-        items: [selectedOptions],
-      };
-      localStorage.setItem("favorite", JSON.stringify(favorite));
-    } else {
-      if (profile) {
-        const items = JSON.parse(favorites);
-        const newItems = { items: [...items.items, selectedOptions] };
-
-        localStorage.setItem("favorite", JSON.stringify(newItems));
-      }
-    }
-  }
+  
   useEffect(() => {
     const fetchData = async () => {
       try {
         const url = `/api/symbols`;
 
-        const response = await fetch(url, {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+        const response = await fetch(url);
 
         if (response.ok) {
           const jsonData = await response.json();
@@ -99,65 +158,12 @@ export default function Home() {
 
     fetchData();
   }, []);
-  const ProfileComponent = ({
-    country,
-    logo,
-  }: {
-    country: string;
-    logo: string;
-  }) => {
-    return (
-      <div className="mt-16">
-        <div className="flex">
-          <Image
-            src={logo ? logo : placeholder}
-            width={200}
-            height={200}
-            alt="companypic"
-          />
-          <div className="ml-12">
-            <span className="text-3xl block">
-              {profile ? profile.name : ""}
-            </span>
-            <span className="block mt-1 text-4xl ">${quote.current}</span>
-            <button
-              className="mt-5 bg-green-300 p-2 rounded-md hover:bg-green-400 transition-all  "
-              onClick={addToFavorites}
-            >
-              Add to Favourites
-            </button>
-          </div>
-        </div>
-        <div>
-          <span className="mt-20 block text-center text-2xl ">Summary</span>
-          <div className="mt-2 h-0.5 color bg-black m-auto"></div>
-          <div className="grid grid-cols-2 mt-3">
-            <div className="bg-red-300 h-28 m-3 rounded-lg p-5">
-              <span className="text-xl block">High Price</span>
-              <span className="text-3xl">${quote.high}</span>
-            </div>
-            <div className="bg-red-200 h-28 m-3 rounded-lg p-5">
-              <span className="text-xl block">Opening</span>
-              <span className="text-3xl">${quote.open}</span>
-            </div>
-            <div className="bg-red-400 h-28 m-3 rounded-lg p-5">
-              <span className="text-xl block">Low Price</span>
-              <span className="text-3xl">${quote.low}</span>
-            </div>
-            <div className="bg-red-600 h-28 m-3 rounded-lg p-5">
-              <span className="text-xl block">Closing</span>
-              <span className="text-3xl">${quote.close}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
+  
   return (
     <>
       <Head>
-        <title>Create Next App</title>
-        <meta name="description" content="Generated by create next app" />
+        <title>Stock Price App</title>
+        <meta name="description" content="get stock price" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
@@ -175,7 +181,7 @@ export default function Home() {
               placeholder={"Search"}
             />
           </div>
-          {profile ? <ProfileComponent {...profile} /> : ""}
+          {profile ? <ProfileComponent profile={profile} selectedOptions={selectedOptions} quote={quote}/> : ""}
         </div>
       </main>
     </>

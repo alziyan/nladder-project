@@ -9,11 +9,9 @@ async function getDataFromApi(symbol: string) {
     symbol: symbol,
     token: token ? token : "",
   });
-  console.log(queryParams);
   const res = await fetch(`https://finnhub.io/api/v1/quote?${queryParams}`);
 
   const json = await res.json();
-  console.log("JSON", json);
   return json;
 }
 
@@ -21,10 +19,6 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<Data>
 ) {
-  console.log(req.query);
-  //   if (req.query.symbol || typeof req.query.symbol == string) {
-  //     const data = await getDataFromApi(req.query.symbol);
-  //   }
   let data;
   console.log("type", typeof req.query.symbol);
   if (req.query && req.query.symbol && typeof req.query.symbol == "string") {

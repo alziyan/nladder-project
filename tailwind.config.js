@@ -2,7 +2,11 @@
 module.exports = {
   content: ["./src/pages/index.tsx", "./src/pages/favorites.tsx"],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        play: "playfair-display",
+      },
+    },
   },
   plugins: [],
 };

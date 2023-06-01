@@ -14,7 +14,6 @@ export default async function handler(
   res: NextApiResponse
 ) {
   const symbols: option[] = [];
-  //ts-expect-error
   data.values.forEach((item) => {
     symbols.push({ value: item.displaySymbol, label: item.displaySymbol });
   });

@@ -12,11 +12,7 @@ async function getDataFromApi(symbol: string) {
 
   const url = `https://finnhub.io/api/v1/stock/profile2?${queryParams}`;
 
-  const response = await fetch(url, {
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
+  const response = await fetch(url);
   const json = await response.json();
   return json;
 }
